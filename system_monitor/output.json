@@ -1,0 +1,23 @@
+[
+    {
+        "CPU" : {
+            "Cores_Usage" : [],
+            "Frequency" : "",
+            "Temperature" : ""
+        },
+        "Memory" : {
+            "Physic" : "",
+            "Swap" : "",
+            "Cache" : ""
+        },
+        "Network" : {
+            "Traffic" : "",
+            "Active" : ""
+        },
+        "Disk" : {
+            "IOPS" : "",
+            "TAT" : ""
+        },
+        "Proccess" : []
+    }
+]
