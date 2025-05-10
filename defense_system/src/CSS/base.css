@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&display=swap');
+
+
+:root{
+  --WIDTH: 70em;
+  --HEADER-HEIGHT: 4em;
+  
+  --FONT-COLOR: white;
+  --FONT-JALDI: "Jaldi"
+}
+
+body{
+  background-color: #474946;
+  margin: 0;
+  padding: 0;
+}
+
+#main-header{
+    background-color: #242424;
+    height: var(--HEADER-HEIGHT);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}

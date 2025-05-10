@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="CSS/base.css" />
+    <link rel="stylesheet" href="CSS/index.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Defense System</title>
+    <script type="module" src="JS/main.js" defer></script>
+
+    <script>
+        fetch("Templates/header.html")
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById("main-header").innerHTML = data
+          });
+    </script>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <div id="main-header"></div>
+  
+    <main>
+        
+    </main>
+
+  </body>
+
+</html>
