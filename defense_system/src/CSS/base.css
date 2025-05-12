@@ -27,7 +27,7 @@ body{
 
 #main-content{
   width: var(--WIDTH);
-  height: 80em;
+  height: auto;
   /* background-color: blue; */
   margin: 0 auto;
 }
