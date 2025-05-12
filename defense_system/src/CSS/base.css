@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
 
 
 :root{
@@ -6,7 +6,8 @@
   --HEADER-HEIGHT: 4em;
   
   --FONT-COLOR: white;
-  --FONT-JALDI: "Jaldi"
+  --FONT-JALDI: "Jaldi";
+  --FONT-KANTUMRUY: "Kantumruy Pro";
 }
 
 body{
@@ -22,4 +23,27 @@ body{
     display: flex;
     justify-content: center;
     position: relative;
+}
+
+#main-content{
+  width: var(--WIDTH);
+  height: 80em;
+  /* background-color: blue; */
+  margin: 0 auto;
+}
+
+
+/* Texto */
+h1{
+  font-family: var(--FONT-KANTUMRUY);
+  font-weight: 600;
+  color: var(--FONT-COLOR);
+  margin-bottom: 0;
+  user-select: none;
+}
+
+p{
+  font-family: var(--FONT-JALDI);
+  color: var(--FONT-COLOR);
+  font-weight: 400; 
 }

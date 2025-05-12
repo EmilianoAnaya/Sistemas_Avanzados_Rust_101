@@ -1,0 +1,26 @@
+
+<link rel="stylesheet" href="CSS/home.css">
+<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
+
+<div id="home-page">
+        <div id="metrics-side">
+                <div id="monitoring-trigger">
+                        <h1>Monitoring</h1>
+                        <div id="trigger-buttons-container">
+                                <button class="button-trigger" id="trigger-on">On</button>
+                                <button class="button-trigger" id="trigger-off">Off</button>
+                        </div>
+                </div>
+                <div id="metrics-buttons">
+                        <button class="metric-button">CPU</button>
+                        <button class="metric-button">Memory</button>
+                        <button class="metric-button">Disks</button>
+                        <button class="metric-button">Network</button>
+                        <button class="metric-button">Processes</button>
+                </div>
+        </div>
+        <div id="graphics-side">
+                <canvas id="cpuChart" width="400" height="200"></canvas>
+        </div>
+</div>

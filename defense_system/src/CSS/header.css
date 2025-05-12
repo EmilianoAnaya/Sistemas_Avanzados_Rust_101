@@ -25,7 +25,7 @@
     justify-content: space-between;
 }
 
-button{
+.button-header{
     width: 6em;
     height: 2em;
     background-color: #3d3d3d;

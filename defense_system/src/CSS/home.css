@@ -1,0 +1,73 @@
+
+#home-page{
+    display: flex;
+    width: 100%;
+    border: 1px white solid;
+}
+
+#metrics-side{
+    width: 25%;
+    border: 1px red solid;
+}
+
+#monitoring-trigger{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1em;
+}
+
+#trigger-buttons-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 60%;
+    margin-top: 0.5em;
+}
+
+.button-trigger{
+    width: 5em;
+    border-radius: 10px;
+    user-select: none;
+    font-family: var(--FONT-JALDI);
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#trigger-on{
+    background-color: #2DD752;
+}
+
+#trigger-on:hover{
+    background-color: #2aa046;
+}
+
+#trigger-off{
+    background-color: #D72D2D;
+}
+
+#trigger-off:hover{
+    background-color: #a72121;
+}
+
+
+#metrics-buttons{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    width: 90%;
+}
+
+.metric-button{
+    font-family: var(--FONT-JALDI);
+    font-size: large;
+    background-color: #242424;
+    color: var(--FONT-COLOR);
+    height: 2.5em;
+    user-select: none;
+}
+
+#graphics-side{
+    width: 75%;
+}
