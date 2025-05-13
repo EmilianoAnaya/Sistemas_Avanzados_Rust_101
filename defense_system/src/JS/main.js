@@ -6,43 +6,27 @@ let currentChart = null;
 let currentName = null;
 
 let chartInterval = null;
-let monitoring_flag = false;
 
-window.addEventListener("DOMContentLoaded", () => {
-  // Delegar eventos para navegación SPA
-  document.body.addEventListener("click", (e) => {
-    if (e.target.matches("[data-view]")) {
-      const view = e.target.dataset.view;
-      loadView(view);
-    }
-  });
+let monitor_recolection = null;
 
-  document.body.addEventListener("click", (e) => {
-    if (e.target.matches(".metric-button")) {
-      const label = e.target.textContent.trim().toLowerCase();
-      switch (label) {
-        case "cpu":
-          show_cpu_stats("cpu");
-          break;
-        case "memory":
-          show_memory_stats("memory");
-          break;
-        case "network":
-          show_network_stats("network")  
-          break;
-      }
-    }
-  });
+let labels = [];
 
-  fetch("Templates/header.html")
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById("main-header").innerHTML = data
-    });
+let cpuUsage = [];
 
-  loadView("home");
-});
+let dataPhysic = [];
+let dataSwap = [];
+let dataCache = [];
 
+let receivedData = [];
+let transmittedData = [];
+let activeConnections = [];
+
+let diskRead = [];
+let diskWrite = [];
+let operationE = [];
+let operationS = [];
+
+let processesData = [];
 
 function loadView(viewName) {
   const main = document.getElementById("main-content");
@@ -87,21 +71,21 @@ function show_cpu_stats(chartName) {
   hide_current_chart(chartName);
   
   const graphs_container = get_graph_container();
-  graphs_container.innerHTML = `<canvas id="cpuChart" width="400" height="200"></canvas>`;
+  graphs_container.innerHTML = `
+    <h1>CPU</h1>
+    <canvas id="cpuChart" width="400" height="200"></canvas>
+    `
   
   const ctx = document.getElementById("cpuChart")?.getContext("2d");
   if (!ctx) return;
  
-  const labels = [];
-  const dataPoints = [];
-
   currentChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [{
         label: 'Uso de CPU (%)',
-        data: dataPoints,
+        data: cpuUsage,
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 2,
         fill: true,
@@ -120,15 +104,10 @@ function show_cpu_stats(chartName) {
   });
 
   chartInterval = setInterval(async () => {
-    const usage = await invoke("get_cpu_usage");
-    const now = new Date().toLocaleTimeString();
-
-    labels.push(now);
-    dataPoints.push(usage);
-
-    if (labels.length > 30) {
-      labels.shift();
-      dataPoints.shift();
+    if (!currentChart) {
+      clearInterval(chartInterval);
+      chartInterval = null
+      return;
     }
 
     currentChart?.update?.();
@@ -139,15 +118,13 @@ function show_memory_stats(chartName) {
   hide_current_chart(chartName);
 
   const graphs_container = get_graph_container();
-  graphs_container.innerHTML = `<canvas id="memoryChart" width="400" height="200"></canvas>`
+  graphs_container.innerHTML = `
+    <h1>Memory</h1>
+    <canvas id="memoryChart" width="400" height="200"></canvas>
+    `
   
   const ctx = document.getElementById("memoryChart")?.getContext("2d");
   if (!ctx) return;
-
-  const labels = [];
-  const dataPhysic = [];
-  const dataSwap = [];
-  const dataCache = [];
 
   currentChart = new Chart(ctx, {
     type: 'line',
@@ -195,21 +172,6 @@ function show_memory_stats(chartName) {
       return;
     }
 
-    const stats = await invoke("get_memory_stats");
-    const now = new Date().toLocaleTimeString();
-
-    labels.push(now);
-    dataPhysic.push(stats.physic.toFixed(2));
-    dataSwap.push(stats.swap.toFixed(2));
-    dataCache.push(stats.cache.toFixed(2));
-
-    if (labels.length > 30) {
-      labels.shift();
-      dataPhysic.shift();
-      dataSwap.shift();
-      dataCache.shift();
-    }
-
     currentChart?.update?.();
   }, 1000);
 
@@ -220,6 +182,7 @@ function show_network_stats(chartName) {
 
   const graphs_container = get_graph_container();
   graphs_container.innerHTML = `
+    <h1>Network</h1>
     <canvas id="rec-trans-chart" width="400" height="200"></canvas>
     <canvas id="active-chart" width="400" height="200"></canvas>
   `;
@@ -227,11 +190,6 @@ function show_network_stats(chartName) {
   const recTransCtx = document.getElementById("rec-trans-chart")?.getContext("2d");
   const activeCtx = document.getElementById("active-chart")?.getContext("2d");
   if (!recTransCtx || !activeCtx) return;
-
-  const labels = [];
-  const receivedData = [];
-  const transmittedData = [];
-  const activeConnections = [];
 
   const recTransChart = new Chart(recTransCtx, {
     type: 'line',
@@ -265,7 +223,7 @@ function show_network_stats(chartName) {
     }
   });
 
-  const activeChart = new Chart(activeCtx, {
+  const ReWrChart = new Chart(activeCtx, {
     type: 'line',
     data: {
       labels,
@@ -290,31 +248,281 @@ function show_network_stats(chartName) {
     }
   });
 
-  currentChart = { recTransChart, activeChart };
+  currentChart = { recTransChart, ReWrChart };
 
   chartInterval = setInterval(async () => {
-    if (!currentChart || !currentChart.recTransChart || !currentChart.activeChart) {
+    if (!currentChart || !currentChart.recTransChart || !currentChart.ReWrChart) {
       clearInterval(chartInterval);
       chartInterval = null;
       return;
     }
 
-    const stats = await invoke("get_network_stats");
-    const now = new Date().toLocaleTimeString();
-
-    labels.push(now);
-    receivedData.push(stats.received.toFixed(2));
-    transmittedData.push(stats.transmitted.toFixed(2));
-    activeConnections.push(stats.active);
-
-    if (labels.length > 30) {
-      labels.shift();
-      receivedData.shift();
-      transmittedData.shift();
-      activeConnections.shift();
-    }
-
     currentChart.recTransChart.update();
-    currentChart.activeChart.update();
+    currentChart.ReWrChart.update();
   }, 1000);
 }
+
+function show_disks_stats(chartName) {
+  hide_current_chart(chartName)
+
+  const graphs_container = get_graph_container();
+  graphs_container.innerHTML = `
+    <h1>Disks</h1>
+    <canvas id="op-e-s" width="400" height="200"></canvas>
+    <canvas id="read-write" width="400" height="200"></canvas>
+  `;
+
+  const OpESCtx = document.getElementById("op-e-s")?.getContext("2d");
+  const ReWrCtx = document.getElementById("read-write")?.getContext("2d");
+  if (!OpESCtx || !ReWrCtx) return;
+
+  const OpESChart = new Chart(OpESCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Escritura (IOPS)',
+          data: operationE,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Lectura (IOPS)',
+          data: operationS,
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 2,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  const ReWrChart = new Chart(ReWrCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Lectura (Mbps)',
+          data: diskRead,
+          borderColor: 'rgb(59, 190, 59)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Escritura (Mbps)',
+          data: diskWrite,
+          borderColor: 'rgb(171, 82, 206)',
+          borderWidth: 2,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  currentChart = { OpESChart, ReWrChart };
+
+  chartInterval = setInterval(async () => {
+    if (!currentChart || !currentChart.OpESChart || !currentChart.ReWrChart) {
+      clearInterval(chartInterval);
+      chartInterval = null;
+      return;
+    }
+
+    currentChart.OpESChart.update();
+    currentChart.ReWrChart.update();
+  }, 1000);
+}
+
+function show_processes_stats(chartName) {
+  hide_current_chart(chartName);
+
+  const graphs_container = get_graph_container();
+  graphs_container.innerHTML = `
+    <h1>Processs</h1>
+    <canvas id="processes" width="400" height="200"></canvas>
+  `;
+
+  const ProcCtx = document.getElementById("processes")?.getContext("2d");
+  if (!ProcCtx) return;
+
+  // Inicializar el gráfico
+  currentChart = new Chart(ProcCtx, {
+    type: 'bar',
+    data: {
+      labels: processesData.map(p => p.name), // Nombres iniciales
+      datasets: [{
+        label: 'Uso de CPU (%)',
+        data: processesData.map(p => p.cpu.toFixed(4)), // CPU inicial
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: '% de uso'
+          }
+        },
+        x: {
+          ticks: {
+            autoSkip: false
+          }
+        }
+      }
+    }
+  });
+
+  // Actualizar los datos del gráfico en cada intervalo
+  chartInterval = setInterval(async () => {
+    if (!currentChart) {
+      clearInterval(chartInterval);
+      chartInterval = null;
+      return;
+    }
+
+    // Actualizar los datos del gráfico con los valores más recientes de processesData
+    currentChart.data.labels = processesData.map(p => p.name);
+    currentChart.data.datasets[0].data = processesData.map(p => p.cpu.toFixed(4));
+    currentChart.update(); // Redibujar el gráfico con los nuevos datos
+  }, 1000);
+}
+
+async function fetch_metrics_data() {
+  try {
+      const data = await invoke('start_monitoring');
+      
+      const now = new Date().toLocaleTimeString();
+      let cpu_usage = data.CPU;
+      let memory = data.Memory;
+      let network = data.Network;
+      let disk = data.Disk;
+      processesData = data.Proccess
+
+      labels.push(now)
+      
+      cpuUsage.push(cpu_usage)
+
+      dataPhysic.push(memory.physic.toFixed(2));
+      dataSwap.push(memory.swap.toFixed(2));
+      dataCache.push(memory.cache.toFixed(2));
+
+      receivedData.push(network.received.toFixed(2));
+      transmittedData.push(network.transmitted.toFixed(2));
+      activeConnections.push(network.active);
+
+      diskRead.push(disk.read_mbps);
+      diskWrite.push(disk.write_mbps);
+      operationE.push(disk.iops_write);
+      operationS.push(disk.iops_read);
+
+      if (labels.length > 30) {
+        labels.shift();
+        cpuUsage.shift();
+        dataPhysic.shift();
+        dataSwap.shift();
+        dataCache.shift();
+        receivedData.shift();
+        transmittedData.shift();
+        activeConnections.shift();
+        diskRead.shift();
+        diskWrite.shift();
+        operationE.shift();
+        operationS.shift();
+      }
+
+    } catch (error) {
+      console.error("Error al obtener datos:", error);
+    }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  // Delegar eventos para navegación SPA
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches("[data-view]")) {
+      const view = e.target.dataset.view;
+      loadView(view);
+    }
+  });
+
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches(".metric-button")) {
+      const label = e.target.textContent.trim().toLowerCase();
+      switch (label) {
+        case "cpu":
+          show_cpu_stats(label);
+          break;
+
+        case "memory":
+          show_memory_stats(label);
+          break;
+
+        case "network":
+          show_network_stats(label)  
+          break;
+
+        case "disks":
+          show_disks_stats(label)
+          break
+        
+        case "processes":
+          show_processes_stats(label)
+          break
+      }
+    }
+  });
+
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches("#trigger-on")) {
+      if (monitor_recolection === null) {
+        fetch_metrics_data();
+        monitor_recolection = setInterval(fetch_metrics_data, 1000);
+        
+      }
+    }
+  });
+
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches("#trigger-off")) {
+      if (monitor_recolection != null) {
+        clearInterval(monitor_recolection);
+        monitor_recolection = null;
+
+      }
+    }
+  });
+
+  fetch("Templates/header.html")
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById("main-header").innerHTML = data
+    });
+
+  loadView("home");
+
+});

@@ -2,12 +2,12 @@
 #home-page{
     display: flex;
     width: 100%;
-    border: 1px white solid;
+    /* border: 1px white solid; */
 }
 
 #metrics-side{
     width: 25%;
-    border: 1px red solid;
+    /* border: 1px red solid; */
 }
 
 #monitoring-trigger{
