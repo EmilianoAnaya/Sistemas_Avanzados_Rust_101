@@ -27,6 +27,7 @@ let operationE = [];
 let operationS = [];
 
 let processesData = [];
+let coresUsage = [];
 
 function loadView(viewName) {
   const main = document.getElementById("main-content");
@@ -74,6 +75,15 @@ function show_cpu_stats(chartName) {
   graphs_container.innerHTML = `
     <h1>CPU</h1>
     <canvas id="cpuChart" width="400" height="200"></canvas>
+    <table id="cpuTable" border="1">
+      <thead>
+        <tr>
+          <th>Core</th>
+          <th>Uso (%)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
     `
   
   const ctx = document.getElementById("cpuChart")?.getContext("2d");
@@ -111,6 +121,25 @@ function show_cpu_stats(chartName) {
     }
 
     currentChart?.update?.();
+
+    // Actualizar tabla
+    const tbody = document.querySelector("#cpuTable tbody");
+    tbody.innerHTML = ""; // Limpiar tabla anterior
+
+    coresUsage.forEach((value, index) => {
+      const row = document.createElement("tr");
+
+      const coreCell = document.createElement("td");
+      coreCell.textContent = `Core ${index}`;
+
+      const usageCell = document.createElement("td");
+      usageCell.textContent = value.toFixed(2) + " %";
+
+      row.appendChild(coreCell);
+      row.appendChild(usageCell);
+      tbody.appendChild(row);
+    });
+
   }, 1000);
 }
 
@@ -415,6 +444,11 @@ function show_processes_stats(chartName) {
 
 async function fetch_metrics_data() {
   try {
+      // const data = await invoke('start_monitoring', {
+      //   threshold: 80.0, // Puedes enviar cualquier parámetro
+      //   interval: 1000
+      // });
+
       const data = await invoke('start_monitoring');
       
       const now = new Date().toLocaleTimeString();
@@ -423,10 +457,11 @@ async function fetch_metrics_data() {
       let network = data.Network;
       let disk = data.Disk;
       processesData = data.Proccess
+      coresUsage = cpu_usage.per_core
 
       labels.push(now)
       
-      cpuUsage.push(cpu_usage)
+      cpuUsage.push(cpu_usage.global)
 
       dataPhysic.push(memory.physic.toFixed(2));
       dataSwap.push(memory.swap.toFixed(2));

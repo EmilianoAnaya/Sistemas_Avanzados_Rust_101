@@ -71,3 +71,11 @@
 #graphics-side{
     width: 75%;
 }
+
+#cpuTable{
+    margin: 2em auto;
+    background-color: #7c6f6f;
+    width: 20%;
+    font-family: var(--FONT-JALDI);
+    box-shadow: inset;
+}

@@ -1,8 +1,13 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #![allow(non_snake_case)]
 
-// use std::sync::Mutex;
-// use tauri::State;
+mod utils;
+mod models; // <--- Agrega esta línea
+
+use crate::utils::cpu_spike::detect_cpu_spikes;
+use crate::utils::memory_leak::detect_memory_leaks;
+use crate::models::ProcessStat;
+
 use serde::{Serialize, Deserialize};
 use wmi::{COMLibrary, WMIConnection};
 use sysinfo::{CpuExt, NetworkExt, System, SystemExt, ProcessExt};
@@ -45,15 +50,14 @@ struct MemoryStats {
 }
 
 #[derive(Serialize, Deserialize)]
-
-struct ProcessStat {
-    name : String,
-    cpu : f32
+struct CPUStats {
+    global : f32,
+    per_core : Vec<f32>
 }
 
 #[derive(Serialize, Deserialize)]
 struct MonitorData {
-    CPU : f32,
+    CPU : CPUStats,
     Memory : MemoryStats,
     Network : NetworkStats,
     Disk : DiskStats,
@@ -68,6 +72,7 @@ fn get_processes(system : &System) -> Vec<ProcessStat> {
         .map(|(_, process)| ProcessStat {
             name: process.name().to_string(),
             cpu: process.cpu_usage() / num_cores,
+            memory: process.memory() as f32 / (1024.0 * 1024.0 * 1024.0)
         })
         // .filter(|p| p.cpu > 0.0) 
         .collect();
@@ -145,11 +150,15 @@ fn get_memory_stats(system : &System) -> MemoryStats {
     }
 }
 
-fn get_cpu_usage(system : &System) -> f32 {
-    system.global_cpu_info().cpu_usage()
+fn get_cpu_usage(system : &System) -> CPUStats {
+    CPUStats{
+        global : system.global_cpu_info().cpu_usage(),
+        per_core : system.cpus().iter().map(|cpu| cpu.cpu_usage()).collect(),
+    }
 }
 
 #[tauri::command]
+// async fn start_monitoring(memThreshold : f32, cpuThreshold : f32, netThreshold : f32) -> Result<MonitorData, String> {
 async fn start_monitoring() -> Result<MonitorData, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let mut system = System::new_all();
@@ -168,6 +177,9 @@ async fn start_monitoring() -> Result<MonitorData, String> {
             iops_read: 0, 
             iops_write: 0 
         });
+
+        detect_cpu_spikes(&top_processes, 80.0);
+        detect_memory_leaks(&top_processes, 2.0);
 
         Ok(MonitorData { 
             CPU: cpu_stats, 
