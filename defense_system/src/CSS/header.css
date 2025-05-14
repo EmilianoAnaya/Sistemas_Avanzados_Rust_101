@@ -21,7 +21,7 @@
 
 #head-buttons-cont{
     display: flex;
-    width: 25em;
+    width: 20em;
     justify-content: space-between;
 }
 

@@ -6,9 +6,10 @@ mod models; // <--- Agrega esta línea
 
 use crate::utils::cpu_spike::detect_cpu_spikes;
 use crate::utils::memory_leak::detect_memory_leaks;
-use crate::models::ProcessStat;
+use crate::models::{ProcessStat, ProcessStatMem, NetworkStats};
 
 use serde::{Serialize, Deserialize};
+use utils::ddos_defense::detect_ddos_attack;
 use wmi::{COMLibrary, WMIConnection};
 use sysinfo::{CpuExt, NetworkExt, System, SystemExt, ProcessExt};
 use systemstat::{System as SysStat, Platform};
@@ -36,13 +37,6 @@ struct DiskStats {
 }
 
 #[derive(Serialize, Deserialize)]
-struct NetworkStats {
-    received : f64,
-    transmitted : f64,
-    active : u64
-}
-
-#[derive(Serialize, Deserialize)]
 struct MemoryStats {
     physic : u64,
     swap : u64,
@@ -64,15 +58,36 @@ struct MonitorData {
     Proccess : Vec<ProcessStat>
 }
 
-fn get_processes(system : &System) -> Vec<ProcessStat> {
+fn get_processes_mem(system : &System) -> Vec<ProcessStatMem> {
+    let mut processes: Vec<ProcessStatMem> = system
+        .processes()
+        .iter()
+        .map(|(_, process)| ProcessStatMem {
+            name: process.name().to_string(),
+            memory: process.memory() as f32 / (1024.0 * 1024.0 * 1024.0)
+        })
+        // .filter(|p| p.cpu > 0.0) 
+        .collect();
+
+    processes.sort_by(|a, b| {
+        b.memory
+            .partial_cmp(&a.memory)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    processes.truncate(10);
+    processes
+}
+
+
+fn get_processes_cpu(system : &System) -> Vec<ProcessStat> {
     let num_cores = system.cpus().len() as f32;
     let mut processes: Vec<ProcessStat> = system
         .processes()
         .iter()
         .map(|(_, process)| ProcessStat {
             name: process.name().to_string(),
-            cpu: process.cpu_usage() / num_cores,
-            memory: process.memory() as f32 / (1024.0 * 1024.0 * 1024.0)
+            cpu: process.cpu_usage() / num_cores
         })
         // .filter(|p| p.cpu > 0.0) 
         .collect();
@@ -170,7 +185,8 @@ async fn start_monitoring() -> Result<MonitorData, String> {
         let cpu_stats = get_cpu_usage(&system);
         let memory_stats = get_memory_stats(&system);
         let network_stats = get_network_stats(&system, &stats);
-        let top_processes = get_processes(&system);
+        let top_processes_cpu = get_processes_cpu(&system);
+        let top_process_mem = get_processes_mem(&system);
         let disk_stats = get_disk_stats(&wmi_con).unwrap_or(DiskStats { 
             read_mbps: 0.0, 
             write_mbps: 0.0, 
@@ -178,15 +194,16 @@ async fn start_monitoring() -> Result<MonitorData, String> {
             iops_write: 0 
         });
 
-        detect_cpu_spikes(&top_processes, 80.0);
-        detect_memory_leaks(&top_processes, 2.0);
+        detect_cpu_spikes(&top_processes_cpu, 80.0);
+        detect_memory_leaks(&top_process_mem, 5.0);
+        detect_ddos_attack(&network_stats, 100.0, 100);
 
         Ok(MonitorData { 
             CPU: cpu_stats, 
             Memory: memory_stats, 
             Network: network_stats, 
             Disk: disk_stats, 
-            Proccess: top_processes
+            Proccess: top_processes_cpu
         })
     })
     .await

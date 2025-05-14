@@ -1,12 +1,12 @@
-use crate::models::ProcessStat;
+use crate::models::ProcessStatMem;
 use win_toast_notify::WinToastNotify;
 
-pub fn detect_memory_leaks(processes: &[ProcessStat], threshold_gb: f32) {
-    for p in processes {
-        println!("{} → {:.4} GB", p.name, p.memory);
-    }
-
-    let spikes: Vec<&ProcessStat> = processes
+pub fn detect_memory_leaks(processes: &[ProcessStatMem], threshold_gb: f32) {
+    // for p in processes {
+    //     println!("{}, {} GB", p.name, p.memory);
+    // }
+    
+    let spikes: Vec<&ProcessStatMem> = processes
         .iter()
         .filter(|p| p.memory >= threshold_gb)
         .collect();

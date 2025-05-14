@@ -558,6 +558,6 @@ window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("main-header").innerHTML = data
     });
 
-  loadView("home");
+  loadView("umbrals");
 
 });

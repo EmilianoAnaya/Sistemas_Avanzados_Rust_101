@@ -1,0 +1,42 @@
+
+<link rel="stylesheet" href="CSS/edit.css">
+
+<div id="umbral-page">
+  <h1>Umbrals Configuration</h1>
+  <hr>
+  <div id="umbrals-main">
+
+    <div class="umbral-container">
+      <h2>CPU Umbral</h2>
+      <div class="edit-umbral">
+        <span>CPU Usage</span>
+        <input type="number" class="input-umbral" id="cpu-usage" min="10" max="100", step="10">
+      </div>
+    </div>
+
+    <div class="umbral-container">
+      <h2>Memory Umbral</h2>
+      <div class="edit-umbral">
+        <span>Used Memory (GB)</span>
+        <input type="number" class="input-umbral" id="used-memory" min="1" max="64", step="1">
+      </div>
+    </div>
+
+    <div class="umbral-container">
+      <h2>Network Umbral</h2>
+      <div class="edit-umbral">
+        <span>Data Received (Mbps)</span>
+        <input type="number" class="input-umbral" id="data-received" min="1" max="1001", step="50">
+      </div>
+
+      <div class="edit-umbral">
+        <span>Active Connections</span>
+        <input type="number" class="input-umbral" id="active-connections" min="1" max="1001", step="20">
+      </div>
+    </div>
+
+  </div>  
+  <div id="button-container">
+    <button id="save-changes">Save Changes</button>
+  </div>
+</div>

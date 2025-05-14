@@ -42,7 +42,21 @@ h1{
   user-select: none;
 }
 
+h2{
+  font-family: var(--FONT-KANTUMRUY);
+  color: var(--FONT-COLOR);
+  font-weight: 400;
+  margin-bottom: 0;
+  user-select: none;
+}
+
 p{
+  font-family: var(--FONT-JALDI);
+  color: var(--FONT-COLOR);
+  font-weight: 400; 
+}
+
+span{
   font-family: var(--FONT-JALDI);
   color: var(--FONT-COLOR);
   font-weight: 400; 

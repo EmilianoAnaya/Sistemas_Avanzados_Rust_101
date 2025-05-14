@@ -1,0 +1,50 @@
+
+#umbral-page{
+    width: 100%;
+    border: 1px solid black ;
+}
+
+#umbrals-main{
+    display: flex;
+    width: 100%;
+}
+
+.umbral-container{
+    width: 33.33%;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.edit-umbral{
+    display: flex;
+    width: 70%;
+    justify-content: space-between;
+    margin: 1em 0;
+}
+
+.input-umbral{
+    user-select: none;
+}
+
+#button-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 1em 0;
+}
+
+#save-changes{
+    width: 9em;
+    height: 2em;
+    font-family: var(--FONT-JALDI);
+    font-size: medium;
+    border-radius: 10px;
+    background-color: #2DD752;
+}
+
+#save-changes:hover{
+    background-color: #2aa046;
+}
