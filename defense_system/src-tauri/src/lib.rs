@@ -173,8 +173,8 @@ fn get_cpu_usage(system : &System) -> CPUStats {
 }
 
 #[tauri::command]
-// async fn start_monitoring(memThreshold : f32, cpuThreshold : f32, netThreshold : f32) -> Result<MonitorData, String> {
-async fn start_monitoring() -> Result<MonitorData, String> {
+async fn start_monitoring(cpuThreshold : f32, memThreshold : f32, receivedThreshold : f64, activeThreshold : u64) -> Result<MonitorData, String> {
+// async fn start_monitoring() -> Result<MonitorData, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let mut system = System::new_all();
         let stats = SysStat::new();
@@ -194,9 +194,9 @@ async fn start_monitoring() -> Result<MonitorData, String> {
             iops_write: 0 
         });
 
-        detect_cpu_spikes(&top_processes_cpu, 80.0);
-        detect_memory_leaks(&top_process_mem, 5.0);
-        detect_ddos_attack(&network_stats, 100.0, 100);
+        detect_cpu_spikes(&top_processes_cpu, cpuThreshold);
+        detect_memory_leaks(&top_process_mem, memThreshold);
+        detect_ddos_attack(&network_stats, receivedThreshold, activeThreshold);
 
         Ok(MonitorData { 
             CPU: cpu_stats, 

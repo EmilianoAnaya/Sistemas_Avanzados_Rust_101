@@ -79,3 +79,8 @@
     font-family: var(--FONT-JALDI);
     box-shadow: inset;
 }
+
+#header-monitoring{
+    color: #242424;
+    transition: color ease 0.5s;
+}

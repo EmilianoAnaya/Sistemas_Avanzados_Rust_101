@@ -29,6 +29,21 @@ let operationS = [];
 let processesData = [];
 let coresUsage = [];
 
+let cpuThreshold = 80.0;
+let memoryThreshold = 5.0;
+let receivedThreshold = 100.0;
+let activeThreshold = 100;
+
+let monitoring_activated = false;
+let monitoring_header = null
+
+export {
+  cpuThreshold,
+  memoryThreshold,
+  receivedThreshold,
+  activeThreshold
+};
+
 function loadView(viewName) {
   const main = document.getElementById("main-content");
 
@@ -36,6 +51,21 @@ function loadView(viewName) {
     .then(res => res.text())
     .then(html => {
       main.innerHTML = html;
+
+      if (viewName === "umbrals") {
+        document.getElementById("cpu-usage").value = cpuThreshold;
+        document.getElementById("used-memory").value = memoryThreshold;
+        document.getElementById("data-received").value = receivedThreshold;
+        document.getElementById("active-connections").value = activeThreshold;
+      };
+
+      if (viewName === "home") {
+        monitoring_header = document.getElementById("header-monitoring");
+        if (monitoring_activated) {
+          monitoring_header.style.color = "white";
+        }
+      }
+
     })
 
     .catch(err => {
@@ -444,12 +474,12 @@ function show_processes_stats(chartName) {
 
 async function fetch_metrics_data() {
   try {
-      // const data = await invoke('start_monitoring', {
-      //   threshold: 80.0, // Puedes enviar cualquier parámetro
-      //   interval: 1000
-      // });
-
-      const data = await invoke('start_monitoring');
+      const data = await invoke('start_monitoring', {
+        cpuThreshold: cpuThreshold,
+        memThreshold: memoryThreshold,
+        receivedThreshold : receivedThreshold,
+        activeThreshold : activeThreshold
+      });
       
       const now = new Date().toLocaleTimeString();
       let cpu_usage = data.CPU;
@@ -497,7 +527,6 @@ async function fetch_metrics_data() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  // Delegar eventos para navegación SPA
   document.body.addEventListener("click", (e) => {
     if (e.target.matches("[data-view]")) {
       const view = e.target.dataset.view;
@@ -535,6 +564,8 @@ window.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
     if (e.target.matches("#trigger-on")) {
       if (monitor_recolection === null) {
+        monitoring_header.style.color = "white";
+        monitoring_activated = true;
         fetch_metrics_data();
         monitor_recolection = setInterval(fetch_metrics_data, 1000);
         
@@ -547,10 +578,48 @@ window.addEventListener("DOMContentLoaded", () => {
       if (monitor_recolection != null) {
         clearInterval(monitor_recolection);
         monitor_recolection = null;
-
+        monitoring_header.style.color = "#242424"
+        monitoring_activated = false
       }
     }
   });
+
+  document.body.addEventListener("click", (e) => {
+  if (e.target.matches("#save-changes")) {
+    const save_message = document.getElementById("save-message");
+
+    const cpuInput = parseFloat(document.getElementById("cpu-usage").value);
+    const memoryInput = parseFloat(document.getElementById("used-memory").value);
+    const receivedInput = parseFloat(document.getElementById("data-received").value);
+    const activeInput = parseInt(document.getElementById("active-connections").value);
+
+    if ((isNaN(cpuInput) || cpuInput <= 0) || 
+        (isNaN(memoryInput) || memoryInput <= 0) ||
+        (isNaN(receivedInput) || receivedInput <= 0) ||
+        (isNaN(activeInput) || activeInput <= 0)) {
+          
+          save_message.innerHTML = "Datos invalidos. Ingresa datos mayores a 0.";
+          save_message.style.color = "black";
+
+          setTimeout(() => {
+            save_message.innerHTML = "";
+          }, 3000);
+          return;
+    };
+
+    cpuThreshold = cpuInput;
+    memoryThreshold = memoryInput;
+    receivedThreshold = receivedInput;
+    activeThreshold = activeInput;
+
+    save_message.innerHTML = "Datos Almacenados con éxito!";
+    save_message.style.color = "#2aa046";
+
+    setTimeout(() => {
+      save_message.innerHTML = "";
+    }, 3000);
+  }
+});
 
   fetch("Templates/header.html")
     .then(response => response.text())
@@ -558,6 +627,6 @@ window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("main-header").innerHTML = data
     });
 
-  loadView("umbrals");
+  loadView("home");
 
 });
